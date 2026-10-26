@@ -88,6 +88,12 @@ pm2 start ecosystem.config.js
 pm2 logs agy-telegram-bot
 ```
 
+### 4. Menjalankan di Pterodactyl Panel (Egg Node.js)
+Bot ini telah didesain khusus agar dapat berjalan di Pterodactyl Panel (Container Egg Node.js):
+- **Zero Curl/Sudo Dependency**: Mengunduh binary resmi `agy` langsung menggunakan **Pure Node.js** (native `fetch`, verifikasi `crypto` SHA512, dan ekstraksi `zlib`), sehingga tidak akan gagal jika container egg tidak memiliki `curl -fsSL` atau akses `root`/`sudo`.
+- **Auto IPv4 Fallback**: Mencegah kendala routing IPv6 (`ENETUNREACH`) pada container panel.
+- **Pterodactyl Startup Command**: `npm start` (atau `node bot.js`). File `setup.js` akan otomatis memeriksa ketersediaan `agy` sebelum bot berjalan.
+
 ---
 
 ## 📋 Daftar Perintah Telegram

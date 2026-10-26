@@ -5,6 +5,8 @@
   "type": "commonjs",
   "main": "bot.js",
   "scripts": {
+    "setup": "node setup.js",
+    "prestart": "node setup.js",
     "start": "node bot.js",
     "dev": "node --watch bot.js"
   },

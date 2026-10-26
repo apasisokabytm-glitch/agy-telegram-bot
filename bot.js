@@ -1839,6 +1839,14 @@ let isBotRunning = false;
 
 async function main() {
   try {
+    // Pastikan agy CLI terpasang (auto-install via native Node.js untuk Pterodactyl egg)
+    try {
+      const setup = require('./setup.js');
+      await setup.ensureAgyInstalled();
+    } catch (e) {
+      console.warn('[agy-telegram-bot] Peringatan saat cek agy CLI:', e.message);
+    }
+
     const me = await bot.telegram.getMe();
     console.log(`[agy-telegram-bot] Terhubung ke Telegram sebagai @${me.username} (${me.first_name})`);
 
