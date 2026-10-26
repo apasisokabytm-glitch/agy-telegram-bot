@@ -1,0 +1,16 @@
+{
+  "name": "agy-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot that drives local Antigravity agy CLI — chat, login via Telegram, skills/plugins, streaming",
+  "type": "commonjs",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node --watch bot.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "telegraf": "^4.16.3"
+  },
+  "engines": { "node": ">=18" }
+}
