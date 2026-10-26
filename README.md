@@ -66,6 +66,8 @@ curl -fsSL https://antigravity.google/cli/install.sh | bash
 Salin dari `.env.example` dan sesuaikan nilainya:
 ```env
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+BOT_NAME=AI VELZYY
+WATERMARK=✨ AI VELZYY
 PUBLIC=yes
 ALLOWED_USERS=your_telegram_id
 AGY_COMMAND=/home/container/.local/bin/agy

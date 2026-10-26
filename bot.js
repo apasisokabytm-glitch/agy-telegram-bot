@@ -26,6 +26,8 @@ const DATA_DIR = path.resolve(process.env.DATA_DIR || './data');
 const DEFAULT_MODEL = (process.env.MODEL || 'gemini-3.8-flash-medium').trim();
 const DEFAULT_MODE = (process.env.MODE || 'auto').trim();
 const DEFAULT_EFFORT = (process.env.EFFORT || 'medium').trim();
+const BOT_NAME = (process.env.BOT_NAME || 'AI VELZYY').trim();
+const CHAT_WATERMARK = (process.env.WATERMARK || process.env.CHAT_WATERMARK || '').trim();
 const OWNER_ID = (process.env.OWNER_ID || ALLOWED[0] || '7948712917').trim();
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 
@@ -289,7 +291,7 @@ async function sendMenuCard(ctx) {
   const personaDisplay = s.persona ? `${escHtml(s.persona.slice(0, 32))}…` : 'Default';
 
   const caption =
-    `🤖 <b>Antigravity Telegram Bot</b>\n\n` +
+    `🤖 <b>${escHtml(BOT_NAME)}</b>\n\n` +
     `<blockquote>` +
     `• <b>Agy CLI:</b> <code>${escHtml(ver.version || 'unknown')}</code>\n` +
     `• <b>Model:</b> <code>${escHtml(s.model)}</code>\n` +
@@ -378,7 +380,7 @@ bot.command('status', async (ctx) => {
   const accDisplay = activeAcc ? `\`${esc(activeAcc.email)}\` (${accList.length} akun terdaftar)` : 'Belum ada akun';
 
   return safeReply(ctx,
-    `📊 *Status Antigravity Bot*\n\n` +
+    `📊 *Status ${esc(BOT_NAME)}*\n\n` +
     `• *Agy CLI:* \`${esc(ver.version || 'ok')}\` (\`${esc(agy.AGY)}\`)\n` +
     `• *Akun Antigravity:* ${accDisplay}\n` +
     `• *Status Login:* ${loginState}\n` +
@@ -392,6 +394,7 @@ bot.command('status', async (ctx) => {
     `• *Riwayat Chat:* ${s.history.length} pesan\n` +
     `• *Workspace:* \`${esc(wsDir(ctx.chat.id))}\` (${files.filter(f => !f.isDir).length} berkas)\n` +
     `• *Mode Akses:* ${getIsPublic() ? '🟢 Public (Semua user)' : '🔴 Private (Hanya Whitelist)'}\n` +
+    `• *Watermark:* ${CHAT_WATERMARK ? `\`${esc(CHAT_WATERMARK)}\`` : 'Nonaktif'}\n` +
     `• *Whitelist:* ${ALLOWED.length ? ALLOWED.join(', ') : 'None'}`,
     { parse_mode: 'Markdown' }
   );
@@ -1025,8 +1028,10 @@ async function sendOwnerPanel(ctx) {
   const activeAcc = accounts.getActiveAccount(getContext(ctx));
 
   const text =
-    `👑 <b>PANEL OWNER ANTIGRAVITY</b>\n\n` +
+    `👑 <b>PANEL OWNER ${escHtml(BOT_NAME.toUpperCase())}</b>\n\n` +
     `<blockquote>` +
+    `• <b>Nama Bot:</b> <code>${escHtml(BOT_NAME)}</code>\n` +
+    `• <b>Watermark Chat:</b> <code>${escHtml(CHAT_WATERMARK || '(Nonaktif)')}</code>\n` +
     `• <b>Mode Akses Bot:</b> ${isPub ? '🟢 <b>PUBLIC</b> (Semua pengguna bisa akses)' : '🔴 <b>PRIVATE</b> (Hanya ALLOWED_USERS)'}\n` +
     `• <b>Total Pengguna Terdaftar:</b> <code>${allUsers.length} user</code>\n` +
     `• <b>Akun Antigravity:</b> <code>${escHtml(activeAcc?.email || 'Belum ada')}</code> (${accList.length} akun)\n` +
@@ -1582,7 +1587,8 @@ async function handleAgyRequest(ctx, userText, opts = {}) {
 
     const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
     const toolSummary = toolCalls.length ? ` • 🔧 ${toolCalls.slice(0, 3).join(', ')}${toolCalls.length > 3 ? ` (+${toolCalls.length - 3})` : ''}` : '';
-    const footer = `\n\n_⏱ ${elapsed}s • \`${esc(model)}\`${toolSummary}_`;
+    const wm = CHAT_WATERMARK ? `\n${esc(CHAT_WATERMARK)}` : '';
+    const footer = `\n\n_⏱ ${elapsed}s • \`${esc(model)}\`${toolSummary}_${wm}`;
 
     const chunks = chunkText(full, 3700);
 
@@ -1851,8 +1857,8 @@ async function main() {
     console.log(`[agy-telegram-bot] Terhubung ke Telegram sebagai @${me.username} (${me.first_name})`);
 
     const ver = await agy.agyVersion().catch(() => ({ version: 'unknown' }));
-    console.log(`[agy-telegram-bot] agy=${ver.version} | multi-tenant=isolated | model=${DEFAULT_MODEL}`);
-    console.log(`[agy-telegram-bot] workspace=${WORKSPACE_ROOT} | data=${DATA_DIR} | mode=${getIsPublic() ? 'public' : 'private'} | allowed=${ALLOWED.join(',') || 'none'}`);
+    console.log(`[${BOT_NAME}] agy=${ver.version} | model=${DEFAULT_MODEL} | watermark=${CHAT_WATERMARK || 'none'}`);
+    console.log(`[${BOT_NAME}] workspace=${WORKSPACE_ROOT} | data=${DATA_DIR} | mode=${getIsPublic() ? 'public' : 'private'} | allowed=${ALLOWED.join(',') || 'none'}`);
 
     bot.launch({ dropPendingUpdates: true });
     isBotRunning = true;
