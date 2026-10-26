@@ -1608,6 +1608,9 @@ async function handleAgyRequest(ctx, userText, opts = {}) {
       }
     }
 
+    const doneTime = new Date().toLocaleTimeString('id-ID', { hour12: false });
+    console.log(`\x1b[90m[${doneTime}]\x1b[0m \x1b[32m[DONE]\x1b[0m   User: \x1b[1m${chatId}\x1b[0m | Duration: \x1b[32m${elapsed}s\x1b[0m | Tools: \x1b[33m${toolCalls.length}\x1b[0m`);
+
     // Auto-send files newly created during this turn
     try {
       const newFiles = findNewFiles(dir, startMs);
@@ -1620,14 +1623,10 @@ async function handleAgyRequest(ctx, userText, opts = {}) {
           if (f.size > 45*1024*1024) continue;
           try {
             await ctx.replyWithDocument({ source: f.path, filename: f.name }, { caption: `📄 ${f.name} (${humanSize(f.size)})` });
-          } catch (e) {
-            console.warn('send file error', e.message);
-          }
+          } catch {}
         }
       }
-    } catch (e) {
-      console.warn('auto-send error', e.message);
-    }
+    } catch {}
 
   } catch (e) {
     isDone = true;
@@ -1843,6 +1842,38 @@ bot.catch((err, ctx) => {
 
 let isBotRunning = false;
 
+const ANSI = {
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
+  cyan: '\x1b[36m',
+  magenta: '\x1b[35m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  gray: '\x1b[90m'
+};
+
+function printBanner(me, ver) {
+  const ascii = String.raw`
+   ___   ______ __  __ _    __ _____  __   
+  /   | / ____/ \ \/ /| |  / // ____// /   
+ / /| |/ / __    \  / | | / // __/  / /    
+/ ___ / /_/ /    / /  | |/ // /___ / /___  
+/_/  |_\____/   /_/   |___//_____//_____/  `;
+
+  const modeStr = getIsPublic() ? `${ANSI.green}Public${ANSI.reset}` : `${ANSI.yellow}Private${ANSI.reset}`;
+  console.log(ANSI.cyan + ANSI.bold + ascii + ANSI.reset);
+  console.log(ANSI.magenta + ANSI.bold + '       AGYVEL — Telegram Antigravity Bot' + ANSI.reset);
+  console.log(ANSI.gray + '────────────────────────────────────────────────────' + ANSI.reset);
+  console.log(ANSI.gray + ' • ' + ANSI.cyan + 'Bot Name   ' + ANSI.reset + ': ' + ANSI.bold + `${BOT_NAME} (@${me.username})` + ANSI.reset);
+  console.log(ANSI.gray + ' • ' + ANSI.cyan + 'Agy CLI    ' + ANSI.reset + ': ' + ANSI.green + `v${ver.version || 'unknown'}` + ANSI.reset);
+  console.log(ANSI.gray + ' • ' + ANSI.cyan + 'Model      ' + ANSI.reset + ': ' + ANSI.yellow + DEFAULT_MODEL + ANSI.reset);
+  console.log(ANSI.gray + ' • ' + ANSI.cyan + 'Access     ' + ANSI.reset + ': ' + modeStr + ANSI.gray + (getIsPublic() ? ' (Semua orang)' : ` (${ALLOWED.length} Whitelist)`) + ANSI.reset);
+  console.log(ANSI.gray + ' • ' + ANSI.cyan + 'Watermark  ' + ANSI.reset + ': ' + (CHAT_WATERMARK ? ANSI.dim + CHAT_WATERMARK + ANSI.reset : ANSI.gray + '(Nonaktif)' + ANSI.reset));
+  console.log(ANSI.gray + ' • ' + ANSI.cyan + 'Status     ' + ANSI.reset + ': ' + ANSI.green + ANSI.bold + 'Online & Ready!' + ANSI.reset);
+  console.log(ANSI.gray + '────────────────────────────────────────────────────' + ANSI.reset);
+}
+
 async function main() {
   try {
     // Pastikan agy CLI terpasang (auto-install via native Node.js untuk Pterodactyl egg)
@@ -1854,15 +1885,11 @@ async function main() {
     }
 
     const me = await bot.telegram.getMe();
-    console.log(`[agy-telegram-bot] Terhubung ke Telegram sebagai @${me.username} (${me.first_name})`);
-
     const ver = await agy.agyVersion().catch(() => ({ version: 'unknown' }));
-    console.log(`[${BOT_NAME}] agy=${ver.version} | model=${DEFAULT_MODEL} | watermark=${CHAT_WATERMARK || 'none'}`);
-    console.log(`[${BOT_NAME}] workspace=${WORKSPACE_ROOT} | data=${DATA_DIR} | mode=${getIsPublic() ? 'public' : 'private'} | allowed=${ALLOWED.join(',') || 'none'}`);
+    printBanner(me, ver);
 
     bot.launch({ dropPendingUpdates: true });
     isBotRunning = true;
-    console.log('[agy-telegram-bot] Bot siap menerima pesan!');
   } catch (err) {
     console.error('[agy-telegram-bot] Gagal memulai bot:', err);
     process.exit(1);
@@ -1870,14 +1897,12 @@ async function main() {
 }
 
 process.once('SIGINT', () => {
-  console.log('SIGINT diterima, menghentikan bot…');
   if (isBotRunning) {
     try { bot.stop('SIGINT'); } catch {}
   }
   process.exit(0);
 });
 process.once('SIGTERM', () => {
-  console.log('SIGTERM diterima, menghentikan bot…');
   if (isBotRunning) {
     try { bot.stop('SIGTERM'); } catch {}
   }

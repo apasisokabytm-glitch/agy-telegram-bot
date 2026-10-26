@@ -181,7 +181,9 @@ async function ensureAgyInstalled() {
       try {
         fs.chmodSync(c, 0o755);
         const out = execSync(`"${c}" --version`, { encoding: 'utf8' }).trim();
-        console.log(`[setup] agy sudah terpasang: ${c} (${out})`);
+        if (require.main === module) {
+          console.log(`[setup] agy sudah terpasang: ${c} (${out})`);
+        }
         return c;
       } catch {}
     }
