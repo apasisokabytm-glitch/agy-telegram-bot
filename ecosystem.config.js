@@ -1,3 +1,9 @@
+/*
+ * Agy telegram bot 
+ * Creator : Vellzyy
+ * Channel Whatsapp : https://whatsapp.com/channel/0029VbDl6c1KmCPJErq9ox3F
+ */
+
 module.exports = {
   apps: [{
     name: 'agy-telegram-bot',

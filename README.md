@@ -1,139 +1,108 @@
-# Antigravity Telegram Bot (`agy-telegram-bot`)
+# 🤖 AGYVEL — Antigravity Telegram Bot
 
-Bot Telegram standalone yang menghubungkan Telegram langsung ke **Google Antigravity CLI (`agy`)** secara lokal di server dengan arsitektur **Multi-Tenant (Per-User Isolation)**.
+Bot Telegram penghubung ke **Google Antigravity CLI (`agy`)** dengan arsitektur multi-tenant (tiap user punya workspace dan sesi terisolasi), auto-failover kuota multi-akun, dan panel owner.
 
-```
-Telegram User A ──┐
-Telegram User B ──┼──> Node.js (Telegraf) ──> data/users/<userId>/ (Home, Tokens, Workspace, Skills)
-Telegram User C ──┘                                      │
-                                                         └──> agy CLI (Isolated Execution per User)
-```
-
-## ✨ Fitur Lengkap
-
-1. **👥 Multi-Tenant & Per-User Isolation (Aman untuk Publik)**
-   - Setiap pengguna Telegram memiliki folder terisolasi di `data/users/<userId>/`.
-   - Kuota, token Google OAuth, akun GitHub, akun Vercel, workspace, riwayat chat, dan skills tersimpan terpisah 100%. User A tidak bisa melihat atau memakai kuota/token User B.
-   - Siap dipublish ke publik cukup dengan mengosongkan `ALLOWED_USERS` di `.env`.
-
-2. **🔐 Autentikasi Headless OAuth di Telegram (`/login` & `/addaccount`)**
-   - Mendukung multi-akun Google Antigravity per pengguna dengan fitur **Auto-Failover / Auto-Rotation**.
-   - Jika akun aktif terkena limit kuota, bot secara otomatis beralih ke akun cadangan pengguna dan melanjutkan pengerjaan.
-
-3. **💬 Chat Interaktif & Streaming Respons**
-   - Menjalankan prompt interaktif dengan output `stream-json`.
-   - Mengupdate pesan secara bertahap (throttled 1.1s) agar respons mengalir halus seperti di terminal.
-   - Memunculkan notifikasi saat `agy` menggunakan tool (`🔧 agy memanggil tool: ...`).
-   - Mengaktifkan `--dangerously-skip-permissions` agar eksekusi tool otomatis berjalan lancar tanpa macet di background.
-
-3. **⚙️ Kontrol Model, Mode & Reasoning Effort**
-   - `/models`: Melihat daftar model Antigravity yang tersedia.
-   - `/model <slug>`: Mengganti model aktif untuk sesi chat (default: `gemini-3.8-flash-medium`).
-   - `/mode <auto|plan|accept-edits>`: Mengubah mode kerja agent.
-   - `/effort <low|medium|high|max>`: Mengatur tingkat reasoning model.
-   - `/agent [nama]`: Memilih atau mereset agent aktif.
-
-4. **🧩 Skills, Plugin & MCP Management**
-   - `/skills`: Melihat daftar skill bawaan Antigravity.
-   - `/skill <nama>`: Membaca dokumentasi `SKILL.md` dari skill terkait.
-   - `/plugin list`: Melihat plugin yang terpasang.
-   - `/plugin install <target>`: Memasang plugin dari URL git atau marketplace.
-   - `/plugin uninstall <nama>`: Menghapus plugin.
-   - `/mcp list`: Melihat daftar MCP server.
-   - `/mcp add <nama> <commandOrUrl> [args...]`: Menambahkan server MCP baru.
-   - `/mcp remove <nama>`: Menghapus server MCP.
-
-5. **📁 Workspace & File Synchronization**
-   - Folder workspace otomatis dibuat per chat: `workspace/<chatId>/` dan di-mount ke `agy --add-dir`.
-   - **Upload:** Mengunggah file (dokumen, foto, video, audio, voice) langsung disimpan ke workspace chat.
-   - Jika file diunggah dengan *caption*, caption langsung dijadikan prompt bagi `agy` untuk memproses/menganalisis file tersebut.
-   - **Auto Send:** Jika `agy` membuat berkas baru di workspace, bot otomatis mendeteksi dan mengirimkannya langsung ke Telegram!
-   - Perintah file: `/files` / `/ls`, `/get <nama>`, `/cat <nama>`, `/rm <nama>`.
-
-6. **🔒 Keamanan & Whitelist**
-   - Whitelist Telegram ID melalui `ALLOWED_USERS` di `.env` (user luar otomatis ditolak).
+* **Creator:** Vellzyy
+* **Channel WhatsApp:** [https://whatsapp.com/channel/0029VbDl6c1KmCPJErq9ox3F](https://whatsapp.com/channel/0029VbDl6c1KmCPJErq9ox3F)
 
 ---
 
-## 🚀 Panduan Instalasi & Menjalankan
+## ⚡ Fitur Utama
 
-### 1. Install CLI Antigravity (jika belum ada)
-```bash
-curl -fsSL https://antigravity.google/cli/install.sh | bash
-```
+* **Multi-Tenant & Isolated**: Tiap pengguna Telegram punya folder data, sesi chat, token, dan workspace sendiri.
+* **Headless Google OAuth**: Login Google Antigravity langsung lewat tombol link di Telegram (`/login`).
+* **Multi-Account & Auto-Failover**: Simpan banyak akun Google. Jika akun utama limit kuota, bot otomatis switch ke akun cadangan.
+* **Streaming Response**: Jawaban AI mengalir dinamis dengan indikator proses dan tool yang sedang berjalan.
+* **Panel Owner & Broadcast**: Toggle mode Public/Private bot secara instan dan broadcast pesan ke seluruh user.
+* **Pterodactyl Egg Ready**: Auto-download dan extract binary `agy` via pure Node.js tanpa butuh `curl` atau akses root/sudo.
 
-### 2. Konfigurasi Lingkungan (`.env`)
-Salin dari `.env.example` dan sesuaikan nilainya:
+---
+
+## 🚀 Cara Menjalankan
+
+### 1. Di Panel Pterodactyl (Egg Node.js)
+Kalo lu run di panel Pterodactyl egg Node.js, langkahnya sangat simpel:
+1. Upload semua file project ke root server panel.
+2. Salin/rename `.env.example` menjadi `.env`, lalu isi minimal:
+   ```env
+   TELEGRAM_BOT_TOKEN=token_bot_kamu
+   ALLOWED_USERS=id_telegram_kamu
+   ```
+3. Pastikan Startup Command diatur ke:
+   ```bash
+   npm start
+   ```
+4. Tekan tombol **Start** pada panel. Bot otomatis mengecek dependensi dan mengunduh `agy` binary sendiri saat pertama kali dijalankan!
+
+---
+
+### 2. Di VPS / Server Linux
+Kalo lu run di VPS biasa:
+1. Clone repositori dan masuk ke foldernya:
+   ```bash
+   git clone https://github.com/apasisokabytm-glitch/agy-telegram-bot.git
+   cd agy-telegram-bot
+   ```
+2. Buat file `.env` dari contoh template:
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+3. Install dependensi dan jalankan:
+   ```bash
+   npm install
+   npm start
+   ```
+   Atau jalankan di background menggunakan **PM2**:
+   ```bash
+   pm2 start ecosystem.config.js
+   pm2 logs agy-telegram-bot
+   ```
+
+---
+
+## ⚙️ Pengaturan Lingkungan (`.env`)
+
 ```env
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+# Token bot dari @BotFather
+TELEGRAM_BOT_TOKEN=8606454248:xxx
+
+# Nama bot yang tampil di banner menu & status
 BOT_NAME=AI VELZYY
+
+# Watermark di bagian bawah setiap chat balasan AI (kosongkan jika tidak ingin pakai)
 WATERMARK=✨ AI VELZYY
+
+# Mode akses bot: yes (publik), no (khusus whitelist)
 PUBLIC=yes
-ALLOWED_USERS=your_telegram_id
-AGY_COMMAND=/home/container/.local/bin/agy
-WORKSPACE_DIR=./workspace
-DATA_DIR=./data
+
+# ID Telegram owner / whitelist (pisahkan dengan koma jika lebih dari satu)
+ALLOWED_USERS=7948712917
+
+# Model default AI
 MODEL=gemini-3.8-flash-medium
 MODE=auto
 EFFORT=medium
 ```
 
-### 3. Install Dependensi & Jalankan
-```bash
-npm install
-npm start
-```
-
-Atau menggunakan **PM2**:
-```bash
-pm2 start ecosystem.config.js
-pm2 logs agy-telegram-bot
-```
-
-### 4. Menjalankan di Pterodactyl Panel (Egg Node.js)
-Bot ini telah didesain khusus agar dapat berjalan di Pterodactyl Panel (Container Egg Node.js):
-- **Zero Curl/Sudo Dependency**: Mengunduh binary resmi `agy` langsung menggunakan **Pure Node.js** (native `fetch`, verifikasi `crypto` SHA512, dan ekstraksi `zlib`), sehingga tidak akan gagal jika container egg tidak memiliki `curl -fsSL` atau akses `root`/`sudo`.
-- **Auto IPv4 Fallback**: Mencegah kendala routing IPv6 (`ENETUNREACH`) pada container panel.
-- **Pterodactyl Startup Command**: `npm start` (atau `node bot.js`). File `setup.js` akan otomatis memeriksa ketersediaan `agy` sebelum bot berjalan.
-
 ---
 
 ## 📋 Daftar Perintah Telegram
 
-| Perintah | Fungsi |
+| Perintah | Keterangan |
 |---|---|
-| `/start` | Memulai bot dan menampilkan ringkasan fitur |
-| `/help` | Menampilkan panduan lengkap penggunaan perintah |
-| `/status` | Melihat status koneksi, agy binary, kuota, model, persona & workspace |
-| `/githubauth <token>` | Menghubungkan akun GitHub (PAT token) |
-| `/vercelauth <token>` | Menghubungkan akun Vercel (Access token) |
-| `/persona` | Mengatur karakter & gaya bahasa AI (pilihan preset atau custom prompt) |
-| `/login` | Memulai proses Google OAuth login via Telegram |
-| `/addaccount` | Menambahkan akun Google Antigravity baru (multi-account) |
-| `/listaccount` | Melihat daftar akun terdaftar & status limit kuota |
-| `/switchaccount <target>` | Beralih akun aktif secara manual |
-| `/delaccount <target>` | Menghapus akun tersimpan |
-| `/cancel` | Membatalkan sesi login OAuth atau proses yang sedang berjalan |
-| `/quota` | Memeriksa kuota pemakaian Antigravity |
-| `/models` | Menampilkan daftar model yang didukung |
-| `/model <nama>` | Mengganti model aktif untuk percakapan saat ini |
-| `/mode <mode>` | Mengganti mode agent (`auto`, `plan`, `accept-edits`) |
-| `/effort <level>` | Mengatur tingkat reasoning (`low`, `medium`, `high`, `max`) |
-| `/agent [nama]` | Melihat atau mengganti agent aktif |
-| `/skills` | Menampilkan daftar skills yang terpasang |
-| `/skill <nama>` | Membaca instruksi detail `SKILL.md` dari suatu skill |
-| `/addskills <url>` | Memasang skill baru langsung dari repositori GitHub |
-| `/rmskill <nama>` | Menghapus skill dari bot |
-| `/plugin list` | Melihat daftar plugin yang terpasang |
-| `/plugin install <target>` | Memasang plugin |
-| `/plugin uninstall <nama>` | Menghapus plugin |
-| `/mcp list` | Melihat daftar MCP server |
-| `/mcp add ...` | Menambahkan server MCP baru |
-| `/mcp remove <nama>` | Menghapus server MCP |
-| `/files` atau `/ls` | Melihat berkas yang ada di workspace |
-| `/get <nama>` | Mengunduh berkas dari workspace ke Telegram |
-| `/cat <nama>` | Membaca berkas teks langsung di Telegram |
-| `/rm <nama>` | Menghapus berkas dari workspace |
-| `/new` atau `/clear` | Membersihkan memori percakapan / sesi baru |
-| `/owner` | Panel kontrol owner (toggle mode public/private) |
-| `/broadcast <pesan>` | Menyiarkan pesan ke seluruh pengguna bot |
+| `/start` / `/menu` | Menampilkan menu utama dan informasi bot |
+| `/login` | Login Google OAuth Antigravity via Telegram |
+| `/addaccount` | Menambahkan akun Google cadangan |
+| `/listaccount` | Daftar akun terhubung & status kuota |
+| `/switchaccount` | Beralih akun aktif secara manual |
+| `/quota` | Cek sisa kuota Antigravity |
+| `/status` | Cek status sistem, workspace, dan model |
+| `/owner` | Panel khusus owner (toggle Public/Private & broadcast) |
+| `/broadcast <pesan>` | Kirim pesan siaran ke semua pengguna |
+| `/model <nama>` | Ganti model AI aktif |
+| `/persona` | Atur karakter gaya bicara AI |
+| `/cancel` | Batalkan proses atau sesi login yang berjalan |
+| `/files` | Melihat file di workspace |
+| `/get <nama>` | Unduh file dari workspace ke chat |
+| `/new` | Reset riwayat percakapan / sesi baru |

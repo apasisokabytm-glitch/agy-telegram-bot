@@ -1,8 +1,8 @@
-/*Creator : Vellzyyy
- * Channel Creator : https://whatsapp.com/channel/0029VbDl6c1KmCPJErq9ox3F
- * Disclaimer : 
- * Note : Jangan hapus watermark
-*/
+/*
+ * Agy telegram bot 
+ * Creator : Vellzyy
+ * Channel Whatsapp : https://whatsapp.com/channel/0029VbDl6c1KmCPJErq9ox3F
+ */
 
 const dns = require('node:dns');
 dns.setDefaultResultOrder('ipv4first');
@@ -18,7 +18,7 @@ const agy = require('./lib/agy');
 const accounts = require('./lib/accounts');
 const users = require('./lib/users');
 
-// ── config ──────────────────────────────────────────────────────────
+// Config
 const TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
 const ALLOWED = (process.env.ALLOWED_USERS || '').split(',').map(s => s.trim()).filter(Boolean);
 const WORKSPACE_ROOT = path.resolve(process.env.WORKSPACE_DIR || './workspace');
@@ -90,7 +90,7 @@ fs.mkdirSync(WORKSPACE_ROOT, { recursive: true });
 fs.mkdirSync(DATA_DIR, { recursive: true });
 users.migrateOwnerIfPresent('7948712917');
 
-// ── presets persona / karakter ──────────────────────────────────────
+// Persona presets
 const PERSONA_PRESETS = {
   cute: {
     label: '🌸 Cewek Imut',
@@ -114,7 +114,7 @@ const PERSONA_PRESETS = {
   }
 };
 
-// ── sessions & per-user context (multi-tenant) ──────────────────────
+// User sessions
 const sessions = {};
 function getContext(idOrCtx) {
   const uid = typeof idOrCtx === 'object' && idOrCtx !== null
@@ -265,12 +265,10 @@ function buildTelegramContext(ctx, dir, session) {
     personaPart;
 }
 
-// ── bot instance (with high handler timeout for agent tasks) ─────────
 const bot = new Telegraf(TOKEN, {
-  handlerTimeout: 600_000 // 10 minutes
+  handlerTimeout: 600_000
 });
 
-// Acknowledge all callback queries immediately to clear client spinner
 bot.use(async (ctx, next) => {
   if (ctx.callbackQuery) {
     ctx.answerCbQuery().catch(() => {});
@@ -279,7 +277,7 @@ bot.use(async (ctx, next) => {
   return next();
 });
 
-// ── Start & Help ────────────────────────────────────────────────────
+// Menu & help
 const MENU_BANNER = 'https://cdn.zass.in/ZSuarsCzAs.png';
 function escHtml(t) {
   return String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -482,7 +480,7 @@ bot.command('agent', async (ctx) => {
   return safeReply(ctx, `🤖 *Agents:*\nAgent saat ini: \`${esc(s.agent || 'default')}\`\n\n\`\`\`\n${esc(info)}\n\`\`\`\n\nUntuk set: \`/agent <nama>\` atau \`/agent reset\``, { parse_mode: 'Markdown' });
 });
 
-// ── Personalisasi Karakter / Persona ────────────────────────────────
+// Persona settings
 function renderPersonaMenu(ctx) {
   const s = getSession(ctx.chat.id);
   const current = s.persona ? `"${esc(s.persona)}"` : '_(Default / Standar Antigravity)_';
@@ -596,7 +594,7 @@ bot.action('cancel_step', async (ctx) => {
   }
 });
 
-// ── GitHub & Vercel Authentication ──────────────────────────────────
+// GitHub & Vercel auth
 bot.command(['githubauth', 'ghauth'], async (ctx) => {
   const uctx = getContext(ctx);
   const token = (ctx.message.text || '').split(/\s+/).slice(1).join(' ').trim();
@@ -705,7 +703,7 @@ bot.command(['new', 'clear', 'reset'], async (ctx) => {
   return safeReply(ctx, '🧹 Riwayat percakapan telah dibersihkan. Memulai sesi baru.');
 });
 
-// ── Skills ──────────────────────────────────────────────────────────
+// Skills
 bot.command('skills', async (ctx) => {
   const uctx = getContext(ctx);
   const r = await agy.listSkills(uctx);
@@ -773,7 +771,7 @@ bot.command(['rmskill', 'delskill'], async (ctx) => {
   return safeReply(ctx, `🗑 Skill \`${esc(name)}\` berhasil dihapus.`, { parse_mode: 'Markdown' });
 });
 
-// ── Plugin commands ─────────────────────────────────────────────────
+// Plugin commands
 bot.command('plugin', async (ctx) => {
   const uctx = getContext(ctx);
   const parts = (ctx.message.text || '').split(/\s+/).slice(1);
@@ -817,7 +815,7 @@ bot.command('plugin', async (ctx) => {
   return safeReply(ctx, 'Format: `/plugin list` | `/plugin install <target>` | `/plugin uninstall <nama>` | `/plugin enable <nama>` | `/plugin disable <nama>`', { parse_mode: 'Markdown' });
 });
 
-// ── MCP commands ────────────────────────────────────────────────────
+// MCP commands
 bot.command('mcp', async (ctx) => {
   const uctx = getContext(ctx);
   const parts = (ctx.message.text || '').split(/\s+/).slice(1);
@@ -865,7 +863,7 @@ bot.command('mcp', async (ctx) => {
   return safeReply(ctx, 'Format:\n• `/mcp list`\n• `/mcp add <nama> <commandOrUrl> [args...]`\n• `/mcp remove <nama>`', { parse_mode: 'Markdown' });
 });
 
-// ── Workspace & File commands ───────────────────────────────────────
+// Workspace files
 bot.command(['files', 'ls', 'workspace'], async (ctx) => {
   const dir = wsDir(ctx.chat.id);
   const files = listFiles(dir);
@@ -917,7 +915,7 @@ bot.command('rm', async (ctx) => {
   } catch (e) { return safeReply(ctx, `⚠️ Gagal menghapus: ${esc(String(e).slice(0, 600))}`); }
 });
 
-// ── The Unified /cancel Command ─────────────────────────────────────
+// Cancel command
 bot.command('cancel', async (ctx) => {
   const chatId = String(ctx.chat.id);
   let didCancel = false;
@@ -952,7 +950,7 @@ bot.command('cancel', async (ctx) => {
   return safeReply(ctx, 'ℹ️ Tidak ada proses yang sedang berjalan.');
 });
 
-// ── Inline Button Action Handlers ───────────────────────────────────
+// Button callbacks
 bot.action('cancel_proc', async (ctx) => {
   const chatId = String(ctx.chat.id);
   if (activeProcesses.has(chatId)) {
@@ -1017,7 +1015,7 @@ bot.action('act:new', async (ctx) => {
   return safeReply(ctx, '🧹 Riwayat percakapan telah dibersihkan. Memulai sesi baru.');
 });
 
-// ── Owner Control & Broadcast ───────────────────────────────────────
+// Owner panel & broadcast
 async function sendOwnerPanel(ctx) {
   if (!isOwner(ctx)) {
     return safeReply(ctx, '⛔ Panel ini khusus untuk Owner.');
@@ -1173,7 +1171,7 @@ bot.action('act:back_menu', async (ctx) => {
   return sendMenuCard(ctx);
 });
 
-// ── OAuth Login & Multi-Account Flow ────────────────────────────────
+// OAuth & multi-account
 async function startLoginFlow(ctx, isAddAccount = false) {
   const chatId = String(ctx.chat.id);
   const uctx = getContext(ctx);
@@ -1342,7 +1340,7 @@ bot.action('act:quota', async (ctx) => {
   return safeEdit(ctx, m.message_id, `⚠️ Gagal cek kuota: \`${esc(q.error)}\``, { parse_mode: 'Markdown' });
 });
 
-// ── File Uploads ────────────────────────────────────────────────────
+// File uploads
 async function saveFileFromCtx(ctx) {
   const dir = wsDir(ctx.chat.id);
   let fileId = null, fileName = null;
@@ -1391,7 +1389,7 @@ async function saveFileFromCtx(ctx) {
   return { dest, fileName: path.basename(dest), size: buf.length, href: link.href };
 }
 
-// ── Clean & Concise Prompt Execution ────────────────────────────────
+// Execute prompt
 async function handleAgyRequest(ctx, userText, opts = {}) {
   const chatId = String(ctx.chat.id);
   if (busy.has(chatId)) {
@@ -1639,7 +1637,7 @@ async function handleAgyRequest(ctx, userText, opts = {}) {
   }
 }
 
-// ── File Message Handler ────────────────────────────────────────────
+// File message handler
 async function handleFileMessage(ctx) {
   try {
     const chatId = String(ctx.chat.id);
@@ -1678,7 +1676,7 @@ async function handleFileMessage(ctx) {
 
 bot.on(['document', 'photo', 'video', 'animation', 'audio', 'voice', 'video_note', 'sticker'], handleFileMessage);
 
-// ── Text Message Handler ────────────────────────────────────────────
+// Text message handler
 bot.on('text', async (ctx, next) => {
   const chatId = String(ctx.chat.id);
   const uctx = getContext(ctx);
@@ -1834,7 +1832,7 @@ bot.on('text', async (ctx, next) => {
   return next();
 });
 
-// ── Startup & Lifecycle ─────────────────────────────────────────────
+// Startup
 bot.catch((err, ctx) => {
   console.error('[bot error]', err);
   try { ctx.reply(`💥 ${String(err).slice(0, 800)}`); } catch {}
